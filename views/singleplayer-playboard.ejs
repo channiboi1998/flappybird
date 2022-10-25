@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flappy Bird</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/jquery/jquery.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <section class="container-fluid p-5 pb-0 header active-players text-light">
+        <p>Single Player</p>
+    </section>
+    <section class="container-fluid page single-player playboard d-flex p-5 text-light">
+        <div class="gameboard row content bg-dark border">
+            <div id="game" class="col-sm-8 gameplay-area">
+                <div id="block"></div>
+                <div id="hole"></div>
+                <div id="character"></div>
+            </div>
+            <div class="col-sm-12 col-md-4 chatbox p-0">
+                <div id="message-log" class="message-log row"></div>
+                <form action="#" class="row" id="submit-message-form">
+                    <div class="col-sm-12 col-md-8 p-0">
+                        <input type="text" id="input_message_field" class="form-control rounded-0" placeholder="Type message here....">
+                    </div>            
+                    <div class="col-sm-12 col-md-4 p-0">
+                        <input type="submit" class="submit-message-button btn btn-dark form-control">
+                    </div>        
+                </form>
+            </div>
+        </div>
+    </section>
+    <script src="/js/bootstrap/bootstrap.js"></script>
+  </body>
+</html>
+<style>
+#game {
+    width: 400px;
+    height: 500px;
+    border: 1px solid black;
+    margin: auto;
+    background-color: #fff;
+    overflow: hidden;
+}
+#block {
+    width: 50px;
+    height: 500px;
+    background-color: black;
+    position: relative;
+    left: 400px;
+    animation: block 2s infinite linear;
+}
+@keyframes block {
+    0%{left:400px}
+    100%{left:-50px}
+}
+#hole {
+    width: 50px;
+    height: 150px;
+    background-color: white;
+    position: relative;
+    left: 400px;
+    top: -500px;
+    animation: block 2s infinite linear;
+}
+#character {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    position: absolute;
+    top: 100px;
+    border-radius: 50%;
+}
+</style>
+<script>
+    $(document).ready(function() {
+
+        /***
+         * This are the predefined variables of the game [block, hole and character]
+         */
+        var block = document.getElementById('block');
+        var hole = document.getElementById('hole');
+        var character = document.getElementById('character');
+
+        var jumping = 0;
+        var counter = 0;
+
+        /***
+         * This method checks if the `hole` element if getting animated or in animation
+         */ 
+        hole.addEventListener('animationiteration', () => {
+            var random = -((Math.random()*300) + 150);
+            hole.style.top = random + 'px';
+            counter++;
+        });
+
+        setInterval(function() {
+            /***
+             * Fetching the character's Top pixel to make it as a basis later
+             */
+            var characterTop = parseInt(window.getComputedStyle(character).getPropertyValue('top'));
+            /***
+             * Check if not jumping, if not jumping, then add `3px` to the top CSS of character for it to go down.
+             */
+            if(jumping == 0) {
+                character.style.top = (characterTop + 3) + 'px';
+            }
+
+            /***
+             * Fetching the holes values
+             */ 
+            var blockLeft = parseInt(window.getComputedStyle(block).getPropertyValue('left'));
+            var holeTop = parseInt(window.getComputedStyle(hole).getPropertyValue('top'));
+            var cTop = -(500-characterTop);
+
+            /***
+             * If Statement: If this if statement passes all of the conditions, then the game is over.
+             * 
+             * First Condition - If the character top is below the bottom of the game, then the game is over.
+             * 
+             * Second Condition - What the second statement is doing is that if the character hits the `block`, the game is over, UNLESS it is also hitting the `hole` then it is still good.
+             */
+            if((characterTop>480) || ((blockLeft<20) && (blockLeft>-50) && ((cTop<holeTop) || (cTop>holeTop+130)))) {
+                /***
+                 * Clearing the animation of the `block` and `hole`
+                 */
+                setTimeout(function() {
+                    $('#block').css('animation', 'block 2s infinite linear');
+                    $('#hole').css('animation', 'block 2s infinite linear');
+                }, 700);
+
+                alert('Game over. Score: ' + (counter));$('#block').css('animation', 'unset');
+                $('#block').css('animation', 'unset');
+                $('#hole').css('animation', 'unset');
+
+                character.style.top = 100 + 'px';
+                counter = 0;
+            }
+        }, 10);
+
+        /***
+         * Means that the character is flying.
+         */
+        $(document).on('click', '.gameboard', function() {
+            //Stop the gravity going down
+            jumping = 1;
+            let jumpCount = 0;
+            var jumpInterval = setInterval(function() {
+                var characterTop = parseInt(window.getComputedStyle(character).getPropertyValue('top'));
+                if((characterTop>6)&&(jumpCount<15)) {
+                    character.style.top = (characterTop-5) + 'px';
+                }
+                if(jumpCount>20) {
+                    clearInterval(jumpInterval);
+                    jumping=0;
+                    jumpCount=0;
+                }
+                jumpCount++;
+            }, 10);
+        })
+
+    });
+
+</script>

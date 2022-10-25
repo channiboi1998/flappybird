@@ -1,0 +1,151 @@
+::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+	width: 10px;
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+	background-color: #000000;
+	border: 2px solid #555555;
+}
+
+body {
+    background-color: #000;
+}
+
+section.page {
+    height: 100%;
+    justify-content: space-evenly;
+}
+
+section.playboard {
+    min-height: 600px;
+}
+
+section.page .content {
+    width: 100%;
+    overflow: hidden;
+}
+
+section.homepage {
+    height: unset;
+    min-height: 100vh;
+    background:linear-gradient(0deg, rgb(0 0 0 / 70%), rgb(0 0 0 / 70%)), url(/img/flappy-bird-background.gif);
+    background-size: cover;
+    background-position: center;
+}
+
+section.single-player .chatbox {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+section.homepage ul#room-list {
+    list-style: none;
+    padding: unset;
+    display: block;
+}
+
+section.homepage ul#room-list li {
+    display: inline-block;
+    margin-right: 14px;
+}
+
+section.playboard .gameplay-area {
+    position: relative;
+}
+
+section.playboard .chatbox {
+    font-size: 14px;
+    border-left: 1px solid;
+    position: relative;
+    overflow-y: scroll;
+    max-height: 580px;
+}
+
+section.playboard #submit-message-form {
+    width: 100%;
+    margin: unset;
+    position: sticky;
+    bottom: 0;
+}
+
+section.playboard .submit-message-button {
+    background-color: #0f0f10;
+}
+
+section.playboard .message-log {
+    display: block;
+    padding: 5px;
+    width: 100%;
+    margin: unset;
+    padding-bottom: 50px;
+    height: 100%;
+}
+
+
+section.playboard #game {
+    position: relative;
+    background-color: #fff;
+    background-image: url('/img/flappy-bird-background.gif');
+    background-size: cover;
+    background-position: center;
+    width: 300px;
+    height: 500px;
+    border: 1px solid black;
+    margin: auto;
+    overflow: hidden;
+}
+section.playboard .character {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    position: absolute;
+    top: 100px;
+    border-radius: 50%;
+}
+
+section.playboard .gameplay-area {
+    position: relative;
+}
+section.playboard .waiting-start-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    background: #000;
+    left: 0;
+    text-align: center;
+    padding-top: 60px;
+    z-index: 2;
+}
+section.playboard .waiting-start-overlay img {
+    max-width: 80px;
+    margin-top: 30px;
+}
+
+section.playboard #start-game,
+section.playboard #restart-game {
+    z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+section.playboard #restart-game {
+    display: none;
+}
+
+@media only screen and (max-width: 768px) {
+    section.playboard .chatbox {
+        border-left: unset;
+    }
+}

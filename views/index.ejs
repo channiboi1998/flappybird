@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Flappy Bird</title>
+        <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+        <script src="/js/jquery/jquery.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/script.js"></script>
+    </head>
+    <body>
+        <section class="container-fluid page homepage d-flex p-5 text-light">
+            <div class="row content text-center align-self-center">
+                <span class="col-12 homepage-description mb-5">
+                    <h1>Multiplayer Flappy Bird</h1>
+                    <p>Flappy Bird is a mobile game developed by Vietnamese video game artist and programmer Dong Nguyen, under his game development company .Gears.</p>
+                </span>
+                <span class="col mb-3">
+                    <a href="/single-player" class="btn btn-success btn-lg form-control mb-3">Play Solo</a>
+                    <a href="/create-room" id="create-room" class="btn btn-primary btn-lg form-control mb-3">Generate a Room</a>
+                    <p class="room-list">
+                        Available Multiplayer Rooms: (max of 2 sockets per room)
+                        <br>
+                        <ul id="room-list"></ul>
+                    </p>
+                </span>
+            </div>
+        </section>
+        <script src="/js/bootstrap/bootstrap.js"></script>
+    </body>
+</html>

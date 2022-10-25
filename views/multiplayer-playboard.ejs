@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flappy Bird</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/jquery/jquery.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <section class="container-fluid p-5 pb-0 header active-players text-light">
+        <a href="/">Go back to homepage</a>
+        <p class="mt-5">In room: <%=room_name%></p>
+        <div id="playing-players"></div>
+        <p class="mb-0"><b>Instructions</b>: Just simply click on the gameplay area to make your character jump. Whoever character that last touches the ground wins.</p>
+    </section>
+    <section class="container-fluid page playboard d-flex p-5 text-light">
+        <div class="row content bg-dark border">
+            <div class="col-sm-8 gameplay-area">
+                <div class="waiting-start-overlay">
+                    <h1>Waiting for someone else to play with</h1>
+                    <p>Maximum of 2 players (socket_id) per room. You can share the url to a friend and play Flappy Bird.</p>
+                    <img src="/img/pre-loader.gif" alt="">
+                </div>
+                <button id="start-game" class="btn btn-success btn-lg">Start Game</button>
+                <button id="restart-game" class="btn btn-success btn-lg">Restart Game</button>
+                <div id="game"></div>
+            </div>
+            <div class="col-sm-12 col-md-4 chatbox p-0">
+                <div id="message-log" class="message-log row"></div>
+                <form action="#" class="row" id="submit-message-form">
+                    <div class="col-sm-12 col-md-8 p-0">
+                        <input type="text" id="input_message_field" class="form-control rounded-0" placeholder="Type message here....">
+                    </div>            
+                    <div class="col-sm-12 col-md-4 p-0">
+                        <input type="submit" class="submit-message-button btn btn-dark form-control">
+                    </div>        
+                </form>
+            </div>
+        </div>
+    </section>
+    <script src="/js/bootstrap/bootstrap.js"></script>
+  </body>
+</html>
+
+<script>
+    $('document').ready(function() {
+        
+        const socket = io();
+        const room_name = '<%=room_name%>';
+
+        var my_socket_id = '';
+        socket.on('obtain_socket_id_client', function(socket_id) {
+            my_socket_id = socket_id.data;
+        });
+
+        /***
+         * This is just for the server to fetch the list of rooms. This is needed so that server will identify how many users are in a room. Remove the room on the list in homepage if it is full (Maximum of 2 sockets per room)
+         */
+        socket.emit('fetch_room_list_server');
+        
+        /***
+         * The function of this is to basically join client socket to the room name.
+         */
+        socket.emit('new_user_joined_room_server', {room_name: room_name});
+
+        /***
+         * The function of this listener is to update the client details [e.g Player in Room, Client Character coordiates], and also for these details to be broadcasted.
+         */
+        socket.on('active_users_in_room_client', function(result) {
+            /***
+             * This is for the `Active Players in Room` & for placing the characters based on the clients coordinates given by the server
+             */
+            let players_dom = '';
+            let player_character_dom = '';
+            
+            console.log('Loggint the room', result.data.block);
+
+            /***
+             * (Not yet done): Looping thru the block (However on the server we only just pass 1 array with 1 block)
+             * Will continue on this once the block detection is done
+             */ 
+            for (i in result.data.block) {
+                player_character_dom += '<div class="block" data-block-left="'+result.data.block[i].left+'" style="height:'+result.data.block[i].height+'px; left: '+result.data.block[i].left+'px"></div>';
+            }
+
+            /***
+             * Looping the room's players. THis is for displaying the players in room, and for displaying the player's character on the gameboard area
+             */
+            for (i in result.data.users) {
+                /***
+                 * Just adding a (You) and (Stranger) on player's list in room
+                 */
+                if (result.data.users[i].name == my_socket_id) {
+                    players_dom += '<p>Player <a href="#" style="color:'+result.data.users[i].color+'">(You) - '+result.data.users[i].name+'</a></p>';
+                } else {
+                    players_dom += '<p>Player <a href="#" style="color:'+result.data.users[i].color+'">(Stranger) - '+result.data.users[i].name+'</a></p>';
+                }
+
+                /***
+                 * Displaying the player's character on the gameboard area
+                 */
+                player_character_dom += '<div class="character" data-character-top="'+result.data.users[i].top+'" data-character-socket="'+result.data.users[i].name+'" style="background-color: '+result.data.users[i].color+';top:'+result.data.users[i].top+'px"></div>';                
+            }
+
+            $('#playing-players').html(players_dom);
+            $('#game').html(player_character_dom);
+
+            /***
+             * If this event is fired, means that the game is restarted too
+             */
+            $('#start-game').show();
+            $('#restart-game').hide();             
+            
+            /***
+             * This code is checking if there are sufficient amount of players in the room
+             */
+            if (result.data.users.length != 2) {
+                $('.waiting-start-overlay').show();
+                $('#start-game').show();
+            } else if (result.data.users.length == 2) {
+                $('.waiting-start-overlay').hide();
+            }
+
+        });
+        
+        /***
+         * This listener is for updating the character doms and block everytime this listener has event
+         */
+        socket.on('update_characters_dom_client', function(result) {
+            $('#start-game').hide();
+            let player_character_dom = '';
+
+            /***
+             * (Not yet done): Looping thru the block (However on the server we only just pass 1 array with 1 block)
+             * Will continue on this once the block detection is done
+             */ 
+             for (i in result.data.block) {
+                player_character_dom += '<div class="block" data-block-left="'+result.data.block[i].left+'" style="height:'+result.data.block[i].height+'px; left: '+result.data.block[i].left+'px"></div>';
+            }
+
+            for (i in result.data.users) {
+                player_character_dom += '<div class="character" data-character-top="'+result.data.users[i].top+'" data-character-socket="'+result.data.users[i].name+'" style="background-color: '+result.data.users[i].color+';top:'+result.data.users[i].top+'px"></div>';                
+            }
+            $('#game').html(player_character_dom);
+        });
+
+        /***
+         * What this does is whenever the client clicks on this element, it decreases the value of their character (making it go upwards) on the server
+         */
+        $('.gameplay-area').on('click', function() {
+            data = {
+                'room_name': room_name,
+                'socket_id': my_socket_id,
+            };
+            socket.emit('client_character_jump_update_server', {data: data});
+        });
+
+        /***
+         *  If `Start Game` button is clicked, call the `process_gameplay` which has the setInterval function in updating the characters on the server
+         */
+        $('#start-game').on('click', function() {
+            $(this).hide();
+            process_gameplay();
+        });
+
+        /***
+         * When the `restart game` is clicked, emit the `restart_game_server` towards the server
+         */
+        $('#restart-game').on('click', function() {
+            socket.emit('restart_game_server', {room_name: room_name});
+        });
+
+        /***
+         * A socket listener, you can see that it is calling the `process_gameplay` as well
+         */
+        socket.on('restart_game_client', function() {
+            $('#start-game').hide();
+            $('#restart-game').hide();
+            process_gameplay();
+        });
+
+        /***
+         * This method is being called when `start` and `restart` button is clicked. You can also see that here is our setInterval function that has emit socket methods on it.
+         */
+        function process_gameplay() {
+            let my_character = $('div#game').find('[data-character-socket="'+my_socket_id+'"]');
+            let processCharacters = setInterval(function() {
+
+                /***
+                 * This is just a catch feature wherein if `active_users_in_room_client` is called (this can be when a client or socket disconnects), clear the interval is we want it to refresh the game
+                 */
+                socket.on('active_users_in_room_client', function() {
+                    clearInterval(processCharacters);
+                });
+
+                /***
+                 * Looping thru the characters, check if one of those characters reach the bottom. If positive that there is a character that reaches the bottom, clear the interval and log who wins (the log method is on the server)
+                 */
+                $('.block').each(function() {
+                    let block_left = parseInt($(this).attr('data-block-left'));
+                    if (block_left < 25) {
+                        $('.character').each(function() {
+                            let character_top = parseInt($(this).attr('data-character-top'));
+                            if (character_top < 100) {
+                                let data = {
+                                    'room_name': room_name,
+                                    'error_type': 'block_detection'
+                                };
+                                socket.emit('fetch_who_win_server', {data: data});
+                                clearInterval(processCharacters);
+                            }
+                        });
+                    }
+                });
+
+                $('.character').each(function() {
+                    let character_top = parseInt($(this).attr('data-character-top'));
+                    if (character_top >= 470) {
+                        let data = {
+                                    'room_name': room_name,
+                                    'error_type': 'reach_bottom'
+                        };
+                        socket.emit('fetch_who_win_server', {data: data});
+                        clearInterval(processCharacters);
+                    }
+                });
+
+                /***
+                 * However if the clearInterval is never called, create an emit `update_my_character_on_room_server` again
+                 */
+                let data = {
+                    'room_name': room_name,
+                };
+                socket.emit('update_my_character_on_room_server', {data: data});
+
+            }, 100);
+        }
+
+        /***
+         * Just a socket listener wherein we display the `restart game` button on the clients in this room
+         */
+        socket.on('display_who_win_room_client', function(data) {
+            setTimeout(function() {
+                $('#restart-game').show();
+            }, 500);
+        });
+
+        /***
+         * This socket Listener is the append newly log message (wether it be from robot or a client)
+         */
+        socket.on('message_log_client', function(result) {
+            
+            let new_message = '';
+            if (result.data.socket_id == my_socket_id) {
+                new_message = '<p>You: '+result.data.message+'</p>';
+            } else if (result.data.socket_id != 'Robot') {
+                new_message = '<p>Stranger: '+result.data.message+'</p>';
+            } else {
+                new_message = '<p>'+result.data.socket_id+': '+result.data.message+'</p>';
+            }
+            $('#message-log').append(new_message);
+        })
+
+        /***
+         * This method is for the client to create a message log to a specific room. There is an emit on this function.
+         */
+        $('#submit-message-form').on('submit', function() {
+            let data = {
+                'message': $('#input_message_field').val(),
+                'room_name': room_name,
+            };
+            if (data['message'] === '') {
+                alert('Message cannot be submitted as blank!');
+            } else {
+                socket.emit('create_message_log_server', {data: data});
+                $('#input_message_field').val('');
+            }
+            return false;
+        });
+
+    });
+</script>
+
+<style>
+.block {
+    position: absolute;
+    width: 40px;
+    background: rgb(34,193,195);
+    background: linear-gradient(0deg, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%);
+}
+</style>
